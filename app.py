@@ -10,6 +10,7 @@ import torch
 from facenet_pytorch import MTCNN, fixed_image_standardization, InceptionResnetV1
 from torchvision import datasets, transforms
 
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Store the initial value of widgets in session state
@@ -119,44 +120,31 @@ def preprocess_image(detector, face_extractor, clf, path, transform=None):
     return frame_draw.resize((620, 480), Image.BILINEAR), names, prob
 
 
-def detect(clf):
+def detect(clf, img):
     frame, names, prob = preprocess_image(mtcnn, model, clf, img)
+    # while prob < 0.89:
+    #     print(prob)
+    #     frame, names, prob = preprocess_image(mtcnn, model, clf, img)
+    
     st.image(frame, channels="RGB")
     st.success(f"Found {names} | {prob}")
     for name, prob in zip(names, prob):
         st.write(f"{name} | {prob}")
         
-# def get_video_embedding(model, x): 
-#     embeds = model(x.to(device))
-#     return embeds.detach().cpu().numpy()
-    
-# def face_extract(model, clf, frame, boxes):
-#     names, prob = [], []
-#     if len(boxes):
-#         x = torch.stack([standard_transform(frame.crop(b)) for b in boxes])
-#         embeds = get_video_embedding(model, x)
-#         idx, prob = clf.predict(embeds), clf.predict_proba(embeds).max(axis=1)
-#         print(idx, prob)
-#         names = [IDX_TO_CLASS[idx_] for idx_ in idx]
-#     return names, prob 
 
+# camera = cv2.VideoCapture(0)
 
-# def use_neural_network(detector, face_extractor, clf, path, transform=None):
-#     if not transform: transform = lambda x: x.resize((1280, 1280)) if (np.array(x.size) > 2000).all() else x
+# FRAME_WINDOW = st.image([])
 
-#     capture = path.convert('RGB')
-    
+# run = st.checkbox('Run')
 
-#     iframe = transform(capture)
-   
-#     boxes, probs = detector.detect(iframe)
-    
-#     if boxes is None: boxes, probs = [], []
-    
-#     names, prob = face_extract(face_extractor, clf, iframe, boxes)
-    
-#     return names, prob
-    
+# while run:
+#     _, frame = camera.read()
+#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#     FRAME_WINDOW.image(frame)
+# else:
+#     st.write('Stopped')
+
 
 img_file_buffer = st.camera_input("Start Chatting", key="camera")  
 st.write(st.session_state.model)
@@ -166,7 +154,7 @@ if img_file_buffer is not None:
     
     img = Image.open(img_file_buffer)
     st.info("model loaded")
-    detect(clf)
+    detect(clf, img)
    
     
 
